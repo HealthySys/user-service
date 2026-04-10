@@ -2,8 +2,9 @@ package br.unifor.healthsys.user.controller;
 
 import br.unifor.healthsys.user.dto.AuthRequest;
 import br.unifor.healthsys.user.dto.AuthResponse;
+import br.unifor.healthsys.user.dto.BootstrapStatusResponse;
 import br.unifor.healthsys.user.dto.UserRequest;
-import br.unifor.healthsys.user.model.User;
+import br.unifor.healthsys.user.dto.UserResponse;
 import br.unifor.healthsys.user.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody UserRequest request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(request));
+    }
+
+    @GetMapping("/bootstrap-status")
+    public ResponseEntity<BootstrapStatusResponse> bootstrapStatus() {
+        return ResponseEntity.ok(
+                new BootstrapStatusResponse(userService.isBootstrapRequired(), userService.countUsers())
+        );
     }
 }

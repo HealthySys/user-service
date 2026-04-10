@@ -3,6 +3,10 @@ package br.unifor.healthsys.user.service;
 import br.unifor.healthsys.user.dto.AuthRequest;
 import br.unifor.healthsys.user.dto.AuthResponse;
 import br.unifor.healthsys.user.dto.UserRequest;
+import br.unifor.healthsys.user.dto.UserResponse;
+import br.unifor.healthsys.user.dto.UserUpdateRequest;
+import br.unifor.healthsys.user.exception.ConflictException;
+import br.unifor.healthsys.user.exception.NotFoundException;
 import br.unifor.healthsys.user.model.User;
 import br.unifor.healthsys.user.repository.UserRepository;
 import br.unifor.healthsys.user.security.JwtService;
@@ -12,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -36,8 +42,8 @@ public class UserService {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow();
+        User user = findByUsernameOrEmail(request.getUsername())
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado."));
 
         String token = jwtService.generateToken(user);
 
@@ -46,17 +52,64 @@ public class UserService {
                 .tokenType("Bearer")
                 .expiresIn(jwtService.getExpirationMs())
                 .username(user.getUsername())
+                .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
     }
 
-    public User register(UserRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username ja existe: " + request.getUsername());
+    public UserResponse register(UserRequest request) {
+        validateUniqueFields(request.getUsername(), request.getEmail(), null);
+
+        return saveNewUser(request);
+    }
+
+    public UserResponse create(UserRequest request) {
+        validateUniqueFields(request.getUsername(), request.getEmail(), null);
+
+        return saveNewUser(request);
+    }
+
+    public boolean isBootstrapRequired() {
+        return userRepository.count() == 0;
+    }
+
+    public long countUsers() {
+        return userRepository.count();
+    }
+
+    public UserResponse findCurrentUser(String identifier) {
+        return findByUsernameOrEmail(identifier)
+                .map(UserResponse::from)
+                .orElseThrow(() -> new NotFoundException("Usuário autenticado não encontrado."));
+    }
+
+    public UserResponse update(Long id, UserUpdateRequest request) {
+        User existing = findUserEntity(id);
+        validateUniqueFields(request.getUsername(), request.getEmail(), id);
+
+        existing.setUsername(request.getUsername());
+        existing.setEmail(request.getEmail());
+        existing.setRole(request.getRole());
+        existing.setActive(Boolean.TRUE.equals(request.getActive()));
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email ja cadastrado: " + request.getEmail());
-        }
+
+        return UserResponse.from(userRepository.save(existing));
+    }
+
+    public UserResponse updateStatus(Long id, boolean active) {
+        User existing = findUserEntity(id);
+        existing.setActive(active);
+        return UserResponse.from(userRepository.save(existing));
+    }
+
+    public void delete(Long id) {
+        userRepository.delete(findUserEntity(id));
+    }
+
+    private UserResponse saveNewUser(UserRequest request) {
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -66,15 +119,42 @@ public class UserService {
                 .active(true)
                 .build();
 
-        return userRepository.save(user);
+        return UserResponse.from(userRepository.save(user));
     }
 
-    public List<User> findAll() {
-        return userRepository.findAll();
+    public List<UserResponse> findAll() {
+        return userRepository.findAll().stream()
+                .map(UserResponse::from)
+                .toList();
     }
 
-    public User findById(Long id) {
+    public UserResponse findById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario nao encontrado: " + id));
+                .map(UserResponse::from)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado: " + id));
+    }
+
+    private Optional<User> findByUsernameOrEmail(String identifier) {
+        return userRepository.findByUsername(identifier)
+                .or(() -> userRepository.findByEmail(identifier));
+    }
+
+    private User findUserEntity(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado: " + id));
+    }
+
+    private void validateUniqueFields(String username, String email, Long currentUserId) {
+        userRepository.findByUsername(username)
+                .filter(user -> !Objects.equals(user.getId(), currentUserId))
+                .ifPresent(user -> {
+                    throw new ConflictException("Nome de usuário já existe: " + username);
+                });
+
+        userRepository.findByEmail(email)
+                .filter(user -> !Objects.equals(user.getId(), currentUserId))
+                .ifPresent(user -> {
+                    throw new ConflictException("E-mail já cadastrado: " + email);
+                });
     }
 }

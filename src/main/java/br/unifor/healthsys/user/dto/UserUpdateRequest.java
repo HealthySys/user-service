@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class UserRequest {
+public class UserUpdateRequest {
 
     @NotBlank
     @Size(min = 3, max = 100)
@@ -19,8 +19,6 @@ public class UserRequest {
     @Email
     private String email;
 
-    @NotBlank
-    @Size(min = 8)
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$",
             message = "A senha deve ter no mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e símbolo."
@@ -29,4 +27,7 @@ public class UserRequest {
 
     @NotNull
     private User.Role role;
+
+    @NotNull
+    private Boolean active;
 }
