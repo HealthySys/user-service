@@ -1,5 +1,6 @@
 package br.unifor.healthsys.user.controller;
 
+import br.unifor.healthsys.user.audit.Audited;
 import br.unifor.healthsys.user.dto.UserRequest;
 import br.unifor.healthsys.user.dto.UserResponse;
 import br.unifor.healthsys.user.dto.UserStatusRequest;
@@ -31,24 +32,28 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Audited(action = "READ_ALL", resource = "USER")
     public ResponseEntity<List<UserResponse>> findAll() {
         return ResponseEntity.ok(userService.findAll());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Audited(action = "READ", resource = "USER")
     public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Audited(action = "CREATE", resource = "USER")
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Audited(action = "UPDATE", resource = "USER")
     public ResponseEntity<UserResponse> update(@PathVariable Long id,
                                                @Valid @RequestBody UserUpdateRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
@@ -56,6 +61,7 @@ public class UserController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
+    @Audited(action = "UPDATE_STATUS", resource = "USER")
     public ResponseEntity<UserResponse> updateStatus(@PathVariable Long id,
                                                      @Valid @RequestBody UserStatusRequest request) {
         return ResponseEntity.ok(userService.updateStatus(id, request.getActive()));
@@ -63,6 +69,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Audited(action = "DELETE", resource = "USER")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
