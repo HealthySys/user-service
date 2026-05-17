@@ -17,10 +17,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  cache:
+    type: redis
 
 jwt:
-  secret: healthsys-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
-  expiration-ms: 86400000  # 24 horas
+  key-id: ${JWT_KEY_ID:healthsys-dev-rs256}
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:classpath:keys/private.pem}
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:classpath:keys/public.pem}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}
 
 eureka:
   client:
@@ -33,4 +42,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

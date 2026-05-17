@@ -27,6 +27,10 @@ public class User {
     private String username;
 
     @NotBlank
+    @Column(nullable = false, length = 200)
+    private String nome;
+
+    @NotBlank
     @Email
     @Column(nullable = false, unique = true, length = 150)
     private String email;
@@ -41,6 +45,9 @@ public class User {
 
     @Column(nullable = false)
     private boolean active = true;
+
+    @Column(name = "assinatura_digital", columnDefinition = "TEXT")
+    private String assinaturaDigital;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

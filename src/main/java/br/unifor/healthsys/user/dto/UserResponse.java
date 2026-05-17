@@ -12,8 +12,10 @@ public class UserResponse {
 
     private Long id;
     private String username;
+    private String nome;
     private String email;
     private String role;
+    private String assinaturaDigital;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -22,8 +24,10 @@ public class UserResponse {
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .nome(user.getNome())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .assinaturaDigital(user.getAssinaturaDigital())
                 .active(user.isActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
