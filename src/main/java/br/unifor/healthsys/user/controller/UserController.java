@@ -66,12 +66,4 @@ public class UserController {
                                                      @Valid @RequestBody UserStatusRequest request) {
         return ResponseEntity.ok(userService.updateStatus(id, request.getActive()));
     }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Audited(action = "DELETE", resource = "USER")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        userService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
 }
