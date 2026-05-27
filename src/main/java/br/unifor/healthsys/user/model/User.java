@@ -70,7 +70,6 @@ public class User {
         ADMIN,
         MEDICO,
         ENFERMEIRO,
-        RECEPCIONISTA,
-        PACIENTE
+        RECEPCIONISTA
     }
 }
