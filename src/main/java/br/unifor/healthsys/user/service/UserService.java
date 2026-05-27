@@ -142,10 +142,6 @@ public class UserService {
         return UserResponse.from(userRepository.save(existing));
     }
 
-    public void delete(Long id) {
-        userRepository.delete(findUserEntity(id));
-    }
-
     private UserResponse saveNewUser(UserRequest request) {
         User user = User.builder()
                 .username(request.getUsername())
