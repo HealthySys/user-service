@@ -103,11 +103,12 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>9.37.3</version>
         </dependency>
-        <!-- Cliente Kubernetes: o endpoint /api/users/load-test cria um Job k6 no cluster -->
+        <!-- Cliente Kubernetes: o endpoint /api/users/load-test cria um Job k6 no cluster.
+             Versao gerenciada pelo kubernetes-client-bom no dependencyManagement (NAO fixar
+             aqui, senao desalinha com os modulos transitivos -api/-httpclient). -->
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
-            <version>6.13.4</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -123,6 +124,18 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Alinha TODOS os modulos do fabric8 (client, client-api, httpclient, model...)
+                 na mesma versao. Declarado ANTES do spring-cloud de proposito: o
+                 spring-cloud 2023.0.x fixa o kubernetes-client em 6.9.2 e desalinhava
+                 client(6.13.4) vs client-api(6.9.2), quebrando em runtime com
+                 NoClassDefFoundError. O primeiro BOM importado vence. -->
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-client-bom</artifactId>
+                <version>6.13.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
